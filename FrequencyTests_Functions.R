@@ -402,8 +402,8 @@ data_gen <- function(als=100,k=2,l=2,
   cov_dist<-rnbinom(n=10000,size=2,mu=mcov)
   # or a poisson
   #cov_dist<-rpois(n=10000,lambda = mcov)
-  cov_dist<-cov_dist[cov_dist>=17]
-
+  # Remove coverage values < 10
+  cov_dist<-cov_dist[cov_dist>=10]
   # If consistency is not forced
   if(cons == 0){
     # "als" is the total number of SNPs

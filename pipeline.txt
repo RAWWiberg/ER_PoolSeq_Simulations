@@ -1,0 +1,190 @@
+#-------------------------------------------------------------------------#
+# Pipeline for running the simulation analyses as well as data filtering  #
+# and processing steps.                                                   #
+#                                                                         #
+# Author: R. Axel W. Wiberg                                               #
+# Created: Jan 2017                                                       # 
+# Last Modified: 03.04.2017                                               #
+#-------------------------------------------------------------------------#
+
+# Test the scripts
+$ FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --rescale 0 -k 4 --NSNPs 100
+
+#----------------------------------#
+# 1) Running the main simulations: #
+#----------------------------------#
+# This uses the BASH script "FrequencyTests_SimulationsScript.R"
+# This procedure has only been tested in Linux as a. Other operating
+# systems may require modifications.
+
+# What is the output dir
+
+# MARVIN
+$ outdir=~/data/allele_frequency_tests/output
+# On MARVIN I can also run in parallel: see "simulations.bsh"
+$ parallel FrequencyTests_SimulationScript.R --fst $FST -N 100 --rescale 0 -k {1} --NSNPs 100 --outdir ${outdir} --handle SIMDATA ::: 2 3 4 10
+
+#DESKTOP
+$ outdir=
+
+
+##
+# FST = 0.1
+##
+# Scale: RAW COUNTS
+
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --rescale 0 -k ${i} --NSNPs 1000000 --OUTDIR --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --rescale 0 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: 100
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --scale 100 --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --scale 100 --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: 200
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --scale 200 --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --scale 200 --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: NEFF
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --scale neff --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.1 -N 100 --scale neff --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+
+##
+# FST = 0.2
+##
+# Scale: RAW COUNTS
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --rescale 0 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --rescale 0 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: 100
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 100 --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 100 --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: 200
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 200 --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 200 --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: NEFF
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale neff --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale neff --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+##
+# FST = 0.3
+##
+# Scale: RAW COUNTS
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --rescale 0 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.3 -N 100 --rescale 0 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: 100
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 100 --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.3 -N 100 --scale 100 --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: 200
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 200 --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.3 -N 100 --scale 200 --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+# Scale: NEFF
+# For k = 2, 3, or 4
+$ for i in $(seq 2 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale neff --rescale 1 -k ${i} --NSNPs 1000000 --handle SIMDATA; done
+# For k = 10
+$ FrequencyTests_SimulationScript.R --fst 0.3 -N 100 --scale neff --rescale 1 -k 10 --NSNPs 1000000 --handle SIMDATA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------------------------------------------------------#
+# 2) Testing consistency/scalability of true positive rate: #
+#-----------------------------------------------------------#
+# This also uses the BASH script "FrequencyTests_SimulationsScript.R"
+
+$ for i in $(seq 10); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 100 --rescale 1 -k 4 --NSNPs 10000 --handle ${i}; done
+
+$ for i in $(seq 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 100 --rescale 1 -k 4 --NSNPs 1000000 --handle ${i}; done
+
+$ for i in $(seq 10); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 100 --rescale 1 -k 10 --NSNPs 10000 --handle ${i}; done
+
+$ for i in $(seq 4); do FrequencyTests_SimulationScript.R --fst 0.2 -N 100 --scale 100 --rescale 1 -k 10 --NSNPs 1000000 --handle ${i}; done
+
+
+# Use awk to get specific columns
+# This makes datafiles smaller and plotting easier
+
+# Print only the qbglm p-values (with scale and k info).
+# Header: qglm_unp_l_pval	npops	scale
+$ for i in $(ls *SIMDATA/*); do awk 'BEGIN{FS=OFS="\t"}{if ($29 == 0) print $21,$25,$26}' ./${i} >> ./qbglm_tp0.tab; done
+
+# Header: cmh_pval	npops	scale
+# Print only the cmh p-values (with scale and k info).
+$ for i in $(ls *SIMDATA/*); do awk 'BEGIN{FS=OFS="\t"}{if ($29 == 0) print $6,$25,$26}' ./${i} >> ./cmh_tp0.tab; done
+
+# Print only the mean and sd of allele frequency differences (with scale and k info).
+$ for i in $(ls *SIMDATA/*); do awk 'BEGIN{FS=OFS="\t"}{if ($29 !=1) print $22,$23,$25,$26}' ./${i} >> ./mean_sd_tp0.tab; done
+
+
+
+#----------------------------------------------------------#
+# 3) Re-analysis of Orozco-terWengel et al., 2012 dataset: #
+#----------------------------------------------------------#
+# This uses a python script that implements the Quasibinomial GLMs described in the main text.
+####
+# 1) Subset the original .sync file (See the Rscript: "FrequencyTests_DatasetReanalysis.R")
+####
+
+####
+# 2) Run the python script
+####
+# Scale: NEFF
+$ poolFreqDiffTest_QBGLM.py -mincnt 10 -minc 10 -max 500 -rescale neff -n 500 -nlevels 2 -npops 3 -filename BF37_reduced.sync > BF37_qbglm_neff_cov10-500.rin
+
+# Scale: RAW COUNTS
+$ python2.7 poolFreqDiffTest_QBGLM.py -mincnt 10 -minc 10 -max 500 -rescale nr -n 500 -nlevels 2 -npops 3 -filename BF37_reduced.sync > BF37_qbglm_cov10-500.rin
+
+####
+# 3) Run the resulting R script as a batch script
+####
+# Scale: NEFF
+$ Rscript BF37_qbglm_neff_cov10-500.rin > BF37_qbglm_neff_cov10-500.rout
+
+# Scale: RAW COUNTS
+$ Rscript BF37_qbglm_cov10-500.rin > BF37_qbglm_cov10-500.rout
+
+
+
+
+
+
+
+
