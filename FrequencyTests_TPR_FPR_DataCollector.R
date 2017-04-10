@@ -32,15 +32,23 @@ library(pscl)
 library(qvalue)
 # Set FST and mcov
 args <- commandArgs(trailingOnly = TRUE)
-fst=args[1]#0.1
-mcov=args[2]#200
+fst=as.numeric(args[1])#0.1
+mcov=as.numeric(args[2])#200
+dir=args[3]
+scales<-c(100,200,"neff")
 #-----------------------------------#
 # SOURCE THE FUNCTIONS:
 # From FrequencyTests_Functions.R
 #-----------------------------------#
-source("~/Desktop/Data/RData/RScripts/FrequencyTests_Functions.R")
+initial.options <- commandArgs(trailingOnly = FALSE)
+file.arg.name <- "--file="
+script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
+scriptdir<-dirname(script.name)
+source(paste(scriptdir,"/FrequencyTests_Functions.R",sep=""))
+
 # Set the working directory
-setwd("~/Desktop/Data/allele_frequency_analysis_project/data/")
+cat("Looking for data in: ",dir,"\n")
+setwd(dir)
 
 #--------------------------#
 # False Positive Rate (FPR)#
@@ -70,10 +78,10 @@ for(k in c(2,3,4,10)){
       sim_dat<-read.table(paste(
         "k=",k,
         "_fst=",fst,
-	"0.2_N=100_mcov=",mcov,
+	"_N=100_mcov=",mcov,
 	"_res=0_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA/FrequencyTest_Simulations_k=",k,
         "_fst=",fst,
-	"_N=100_mcov",mcov,
+	"_N=100_mcov=",mcov,
 	"_res=0_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA.csv",
         sep=""),
         sep = "\t",header = TRUE)
@@ -137,17 +145,17 @@ for(k in c(2,3,4,10)){
       }
       fprdat<-rbind(fprdat,fpr)
     }else if(res == 1){
-      for(sc in c(100,200,"neff")){
+      for(sc in scales){
         k <- as.character(k)
         sim_dat<-read.table(paste(
           "k=",k,
           "_fst=",fst,
 	  "_N=100_mcov=",mcov,
 	  "_res=1_scale=",sc,
-          "_SNPs=100000_p_tp=0.01_sel_diff=0.2_SIMDATA/FrequencyTest_Simulations_k=",k,
+          "_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA/FrequencyTest_Simulations_k=",k,
           "_fst=",fst,
 	  "_N=100_mcov=",mcov,
-	  "_res=1_scale=",sc,"_SNPs=100000_p_tp=0.01_sel_diff=0.2_SIMDATA.csv",
+	  "_res=1_scale=",sc,"_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA.csv",
           sep=""),
           sep = "\t",header = TRUE)
         sim_dat<-sim_dat[sim_dat$tp == "0",]
@@ -228,10 +236,10 @@ head(fprdat_m)
 # Save the data.frame as an R object to avoid having to perform
 # calculations again.
 #save(list = ls(all=TRUE), file = "fpr.RData",envir=.GlobalEnv)
-write.table(fprdat_m,paste("FST="fst,
+write.table(fprdat_m,paste("FST=",fst,
 			   "_mcov=",mcov,
 			   "fprdat_melted.tab"),quote=FALSE,row.names=FALSE,sep="\t")
-write.table(fprdat,paste("FST="fst,
+write.table(fprdat,paste("FST=",fst,
 			   "_mcov=",mcov,
 			   "fprdat.tab"),quote=FALSE,row.names=FALSE,sep="\t")
 rm(sim_dat,fprdat,fprdat_m)
@@ -241,14 +249,14 @@ rm(sim_dat,fprdat,fprdat_m)
 #-------------------------#
 # Initialise a dataframe to store data
 tprdat<-data.frame(
-  npops=vector(length=4),
-  scale=vector(length=4),
-  cmh_tp_rates=vector(length=4),
-  cmh_woo_tp_rates=vector(length=4),
-  glm_l_tp_rates=vector(length=4),
-  qglm_unp_tp_rates=vector(length=4),
-  gtest_tp_rates=vector(length=4),
-  ttest_unp_tp_rates=vector(length=4))
+  npops=vector(length=8),
+  scale=vector(length=8),
+  cmh_tp_rates=vector(length=8),
+  cmh_woo_tp_rates=vector(length=8),
+  glm_l_tp_rates=vector(length=8),
+  qglm_unp_tp_rates=vector(length=8),
+  gtest_tp_rates=vector(length=8),
+  ttest_unp_tp_rates=vector(length=8))
 
 # Load the data, perform calculations and store the results
 # results files are quite big so they are loaded one at a time.
@@ -322,7 +330,7 @@ for(k in c(2,3,4,10)){
       tprdat$scale[i]="CT=var."
       i<-i+1
       } else if(res == 1){
-        for (sc in c(100,200,"neff")){
+        for (sc in scales){
           k <- as.character(k)
           sim_dat<-read.table(paste(
             "k=",k,
@@ -400,10 +408,10 @@ colnames(tprdat_m)<-c("npops","scale","test","tpr")
 
 # Save the data.frame as an R object to avoid having to perform
 # calculations again.
-write.table(tprdat_m,paste("FST="fst,
+write.table(tprdat_m,paste("FST=",fst,
 			   "_mcov=",mcov,
 			   "tprdat_melted.tab"),quote=FALSE,row.names=FALSE,sep="\t")
-write.table(tprdat,paste("FST="fst,
+write.table(tprdat,paste("FST=",fst,
 			   "_mcov=",mcov,
 			   "tprdat.tab"),quote=FALSE,row.names=FALSE,sep="\t")
 #save(list = ls(all=TRUE), file = "tpr.RData",envir=.GlobalEnv)
