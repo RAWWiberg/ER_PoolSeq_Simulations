@@ -333,33 +333,32 @@ data_gen <- function(als=100,k=2,l=2,
   woo_pval<-vector(mode = "numeric", length = als)
   woo_W<-vector(mode = "numeric", length = als)
   
-  # Binomial GLM results
+  # G-test results
   g_lxcxpx_pval<-vector(mode = "numeric",length=als)
   g_lxc_pval<-vector(mode="numeric",length=als)
   g_lxcxpx_g<-vector(mode = "numeric",length=als)
   g_lxc_g<-vector(mode="numeric",length=als)
-  glm_lxpx_pval<-vector(mode="numeric",length=als)
-  glm_l_pval<-vector(mode="numeric",length=als)
-  glm_lxpx_dev<-vector(mode="numeric",length=als)
-  glm_l_dev<-vector(mode="numeric",length=als)
-  glm_w<-vector(mode="numeric",length=als)
+  
+  # Binomial GLM results
+  binglm_lxpx_pval<-vector(mode="numeric",length=als)
+  binglm_l_pval<-vector(mode="numeric",length=als)
+  binglm_lxpx_dev<-vector(mode="numeric",length=als)
+  binglm_l_dev<-vector(mode="numeric",length=als)
+  binglm_w<-vector(mode="numeric",length=als)
+  # (without interactions)
+  binglm_l_p_pval_ni<-vector(mode="numeric",length=als)
   
   # Quasibinomial GLM results
-  quasbinom_l_p_pval<-vector(mode="numeric",length=als)
-  quasbinom_l_unp_pval<-vector(mode="numeric",length=als)
+  qbinglm_l_p_pval<-vector(mode="numeric",length=als)
+  qbinglm_l_unp_pval<-vector(mode="numeric",length=als)
   
-  # LM (t-test) results: unpaired
+  # LM (t-test) results: [unpaired]
   m_lm_unp_pval<-vector(mode="numeric",length=als)
   m_lm_unp_w<-vector(mode="numeric",length=als)
-  # LM (t-test) results: paired
+  # LM (t-test) results: [paired]
   m_lm_p_pval<-vector(mode="numeric",length=als)
   m_lm_p_w<-vector(mode="numeric",length=als)
-  # LM (t-test) results: unpaired w/ weights
-  m_lm_unp_w_pval<-vector(mode="numeric",length=als)
-  
-  # LM (t-test) results: paired w/ weights
-  m_lm_p_w_pval<-vector(mode="numeric",length=als)
-  
+
   # Other Statistics
   sd_diffs <- vector(mode = "numeric",length = als)
   mean_diffs <- vector(mode = "numeric",length = als)
@@ -559,36 +558,45 @@ data_gen <- function(als=100,k=2,l=2,
         woo_dat <- woolf.test(m)
       }
 
-    
       # Run the G-test for the SNP
       g_dat <- G_test(m,add=TRUE)
       
       # Create data.frame for the SNP
       d <- get_dat(m,zeroes=1)
 
-      # Run GLM with binomial error distribution.
-      binom_res<- tryCatch(anova(glm(
+      # Run GLM with binomial error distribution: [unpaired]
+      # (without interaction)
+      binglm_res_ni<-glm(cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$tr_l,
+                        family = "binomial")
+      
+      # (with interaction)
+      binglm_res<- tryCatch(anova(glm(
         cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$rep+d$tr_l+d$tr_l:d$rep,
         family = "binomial"),test="LRT"),
         warning=function(w){suppressWarnings(anova(glm(
           cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$rep+d$tr_l+d$tr_l:d$rep,
           family = "binomial"),test="LRT"))})
+
+      # FOR QUASIBINOMIAL GLMS TESTING FOR AN INTERACTION IS NOT POSSIBLE: 
+      # WE RUN OUT OF DEGREES OF FREEDOM FOR THE RESIDUALS. 
+      # IT WORKS FOR THE BINOMIAL GLMs ONLY BECAUSE DISPERSION IS TAKEN TO BE 1
+      # SO WE CAN TEST ON A NORMAL DISTRIBUTION.
       
-      # Run GLM with quasibinomial error distribution: paired
-      quasbinom_res_p<-glm(cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$rep+d$tr_l,
+      # Run GLM with quasibinomial error distribution: [paired]
+      qbinglm_res_p<-glm(cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$rep+d$tr_l,
         family = "quasibinomial")
 
-      # Run GLM with quasibinomial error distribution: unpaired
-      quasbinom_res_unp<-glm(cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$tr_l,
+      # Run GLM with quasibinomial error distribution: [unpaired]
+      qubinglm_res_unp<-glm(cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$tr_l,
         family = "quasibinomial")
-      
-      # Run an lm ("t-test") for the SNP: unpaired
+
+      # Run an lm ("t-test"): [unpaired]
       m_lm_unp <- tryCatch(summary(lm(
         I(A_Cnt/Tot_Cnt)~tr_l,data=d))$coefficients,
         warning=function(w){suppressWarnings(summary(lm(
           I(A_Cnt/Tot_Cnt)~tr_l,data=d))$coefficients)})
 
-      # Run an lm ("t-test") for the SNP: paired
+      # Run an lm ("t-test"): [paired]
       m_lm_p <- tryCatch(summary(lm(
         I(A_Cnt/Tot_Cnt)~rep+tr_l,data=d))$coefficients,
         warning=function(w){suppressWarnings(summary(lm(
@@ -611,36 +619,41 @@ data_gen <- function(als=100,k=2,l=2,
       g_lxcxpx_g[i] <- g_dat[5,1]
       g_lxc_g[i] <- g_dat[3,1]
       
-      # Binomial GLM results
+      # Binomial GLM results: [unpaired]
+      # (without interaction)
+      row<-nrow(summary(binglm_res_ni)$coefficients)
+      binglm_l_p_pval_ni[i]<-summary(binglm_res_ni)$coefficients[row,4]
+      
+      # (with interaction)
       # Check if the Binomial GLM has produced any warnings
       if(is(binom_res[[2]],"warning")){
-        glm_d <- binom_res[[1]]
-        glm_lxpx_pval[i] <- glm_d[[5]][4]
-        glm_l_pval[i] <- glm_d[[5]][3]
-        glm_lxpx_dev[i] <- glm_d[[2]][4]
-        glm_l_dev[i] <- glm_d[[2]][3]
-        glm_w[i] <- "1"
+        glm_d <- binglm_res[[1]]
+        binglm_lxpx_pval[i] <- glm_d[[5]][4]
+        binglm_l_pval[i] <- glm_d[[5]][3]
+        binglm_lxpx_dev[i] <- glm_d[[2]][4]
+        binglm_l_dev[i] <- glm_d[[2]][3]
+        binglm_w[i] <- "1"
       }else{
-        glm_d <- binom_res
-        glm_lxpx_pval[i] <- glm_d[[5]][4]
-        glm_l_pval[i] <- glm_d[[5]][3]
-        glm_lxpx_dev[i] <- glm_d[[2]][4]
-        glm_l_dev[i] <- glm_d[[2]][3]
-        glm_w[i] <- "0"
+        binglm_d <- binglm_res
+        binglm_lxpx_pval[i] <- glm_d[[5]][4]
+        binglm_l_pval[i] <- glm_d[[5]][3]
+        binglm_lxpx_dev[i] <- glm_d[[2]][4]
+        binglm_l_dev[i] <- glm_d[[2]][3]
+        binglm_w[i] <- "0"
       }
-      
-      # Quasibinomial GLM results: paired
+
+      # Quasibinomial GLM results: [paired]
       # "treatment" effect will be last p-value
       row<-nrow(summary(quasbinom_res_p)$coefficients)
-      quasbinom_l_p_pval[i]<-summary(quasbinom_res_p)$coefficients[row,4]
+      qbinglm_l_p_pval[i]<-summary(quasbinom_res_p)$coefficients[row,4]
      
-      # Quasibinomial GLM results: unpaired
+      # Quasibinomial GLM results: [unpaired]
       # "treatment" effect will be last p-value
       row<-nrow(summary(quasbinom_res_unp)$coefficients)
-      quasbinom_l_unp_pval[i]<-summary(quasbinom_res_unp)$coefficients[
+      qbinglm_l_unp_pval[i]<-summary(quasbinom_res_unp)$coefficients[
         row,4]
      
-      # LM (t-test) results: unpaired
+      # LM (t-test) results: [unpaired]
       # Check if the LM (t-test) has produced any warnings
       if(is(m_lm_unp[[2]],"warning")){
         row<-nrow(m_lm_unp[[1]])
@@ -652,7 +665,7 @@ data_gen <- function(als=100,k=2,l=2,
         m_lm_unp_w[i] <- "0"
       }
      
-      # LM (t-test) results: paired
+      # LM (t-test) results: [paired]
       # Check if the LM (t-test) has produced any warnings
       if(is(m_lm_p[[2]],"warning")){
         row<-nrow(m_lm_p[[1]])
@@ -685,15 +698,16 @@ data_gen <- function(als=100,k=2,l=2,
                          "g_lxc_pval"=g_lxc_pval,
                          "g_lxcxpx_g"=g_lxcxpx_g,
                          "g_lxc_g"=g_lxc_g,
-                         "glm_lxp_pval"=glm_lxpx_pval,
-                         "glm_l_pval"=glm_l_pval,
-                         "glm_l_dev"=glm_l_dev,
-                         "glm_lxp_dev"=glm_lxpx_dev,
-                         "glm_w"=glm_w,
+                         "binglm_lxp_pval"=glm_lxpx_pval,
+                         "binglm_l_pval"=glm_l_pval,
+                         "binglm_l_dev"=glm_l_dev,
+                         "binglm_lxp_dev"=glm_lxpx_dev,
+                         "binglm_w"=glm_w,
+                         "binglm_l_p_pval_ni"=binom_l_p_pval,
                          "lm_unp_pval"=m_lm_unp_pval,
                          "lm_p_pval"=m_lm_p_pval,
-                         "qglm_p_l_pval"=quasbinom_l_p_pval,
-                         "qglm_unp_l_pval"=quasbinom_l_unp_pval,
+                         "qbinglm_p_l_pval"=quasbinom_l_p_pval,
+                         "qbinglm_unp_l_pval"=quasbinom_l_unp_pval,
                          "sd_diffs"=sd_diffs,
                          "mean_diffs"=mean_diffs,
                          "diff_s"=diff_s,
