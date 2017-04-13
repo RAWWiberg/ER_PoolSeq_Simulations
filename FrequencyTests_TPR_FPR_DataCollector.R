@@ -35,6 +35,7 @@ args <- commandArgs(trailingOnly = TRUE)
 fst=as.numeric(args[1])#0.1
 mcov=as.numeric(args[2])#200
 dir=args[3]
+K<-c(2,3,4,10)
 scales<-c(100,200,"neff")
 #-----------------------------------#
 # SOURCE THE FUNCTIONS:
@@ -58,10 +59,11 @@ alpha<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5)
 
 # Initialise a dataframe to store data
 fprdat<-data.frame(alpha=vector(),
-                   fpr_glm=vector(),
+                   fpr_binglm_ni=vector(),
+                   fpr_binglm=vector(),
                    fpr_cmh=vector(),
                    fpr_cmh_woo=vector(),
-                   fpr_qglm_unp=vector(),
+                   fpr_qbinglm_unp=vector(),
                    fpr_gtest=vector(),
                    fpr_ttest_unp=vector(),
                    scale=vector(),
@@ -90,7 +92,10 @@ for(k in c(2,3,4,10)){
       
       # Initialise a temporary internal dataframe for the results
       fpr<-data.frame(alpha=rep(alpha,length(unique(sim_dat$scale))),
-                      fpr_glm=vector(
+                      fpr_binglm=vector(
+                        length=length(alpha)*length(unique(sim_dat$scale))),
+                      
+                      fpr_binglm_ni=vector(
                         length=length(alpha)*length(unique(sim_dat$scale))),
                       
                       fpr_cmh=vector(
@@ -99,15 +104,17 @@ for(k in c(2,3,4,10)){
                       fpr_cmh_woo=vector(
                         length=length(alpha)*length(unique(sim_dat$scale))),
                       
-                      fpr_qglm_unp=vector(
+                      fpr_qbinglm_unp=vector(
                         length=length(alpha)*length(unique(sim_dat$scale))),
                       
                       fpr_gtest=vector(
                         length=length(alpha)*length(unique(sim_dat$scale))),
                     
-                      fpr_ttest_unp=vector(
+                      fpr_lm_unp=vector(
                         length=length(alpha)*length(unique(sim_dat$scale))),
+                      
                       scale=rep(unique(sim_dat$scale),each=length(alpha)),
+                      
                       npops=rep(unique(sim_dat$npops),each=length(alpha)))
 
       # Compute the FDR at different levels of alpha
@@ -116,29 +123,39 @@ for(k in c(2,3,4,10)){
           fpr$alpha==a & 
             fpr$scale==scale & 
             fpr$npops==ktxt]<-table(sim_dat$cmh_pval<a)["TRUE"]/nrow(sim_dat)
+        
         fpr$fpr_cmh_woo[
           fpr$alpha==a & 
             fpr$scale==scale & 
             fpr$npops==ktxt]<-table(sim_dat$cmh_pval[
               sim_dat$woo_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
                 sim_dat$woo_pval > 0.05,])
-        fpr$fpr_glm[
+        
+        fpr$fpr_binglm[
           fpr$alpha==a & 
             fpr$scale==scale & 
-            fpr$npops==ktxt]<-table(sim_dat$glm_l_pval[
-              sim_dat$glm_lxp_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
-                sim_dat$glm_lxp_pval > 0.05,])
-        fpr$fpr_qglm_unp[
+            fpr$npops==ktxt]<-table(sim_dat$binglm_l_pval[
+              sim_dat$binglm_lxp_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
+                sim_dat$binglm_lxp_pval > 0.05,])
+        
+        fpr$fpr_binglm_ni[
+          fpr$alpha==a & 
+            fpr$scale==scale & 
+            fpr$npops==ktxt]<-table(sim_dat$binglm_l_p_pval_ni<a)["TRUE"]/nrow(sim_dat)
+        
+        fpr$fpr_qbinglm_unp[
           fpr$alpha==a & 
            fpr$scale==scale & 
-           fpr$npops==ktxt]<-table(sim_dat$qglm_unp_l_pval<a)["TRUE"]/nrow(sim_dat)
+           fpr$npops==ktxt]<-table(sim_dat$qbinglm_unp_l_pval<a)["TRUE"]/nrow(sim_dat)
+        
         fpr$fpr_gtest[
           fpr$alpha==a & 
            fpr$scale==scale & 
            fpr$npops==ktxt]<-table(sim_dat$g_lxc_pval[
              sim_dat$g_lxcxpx_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
                sim_dat$g_lxcxpx_pval > 0.05,])
-        fpr$fpr_ttest_unp[
+       
+         fpr$fpr_lm_unp[
           fpr$alpha==a & 
            fpr$scale==scale & 
            fpr$npops==ktxt]<-table(sim_dat$lm_unp_pval<a)["TRUE"]/nrow(sim_dat)
@@ -163,7 +180,11 @@ for(k in c(2,3,4,10)){
 
         # Initialise a temporary internal dataframe for the results
         fpr<-data.frame(alpha=rep(alpha,length(unique(sim_dat$scale))),
-                        fpr_glm=vector(
+                        
+                        fpr_binglm=vector(
+                          length=length(alpha)*length(unique(sim_dat$scale))),
+                        
+                        fpr_binglm_ni=vector(
                           length=length(alpha)*length(unique(sim_dat$scale))),
                         
                         fpr_cmh=vector(
@@ -178,9 +199,11 @@ for(k in c(2,3,4,10)){
                         fpr_gtest=vector(
                           length=length(alpha)*length(unique(sim_dat$scale))),
                         
-                        fpr_ttest_unp=vector(
+                        fpr_lm_unp=vector(
                           length=length(alpha)*length(unique(sim_dat$scale))),
+                        
                         scale=rep(unique(sim_dat$scale),each=length(alpha)),
+                        
                         npops=rep(unique(sim_dat$npops),each=length(alpha)))
         # Compute the FDR at different levels of alpha
         for(a in alpha){
@@ -188,29 +211,39 @@ for(k in c(2,3,4,10)){
             fpr$alpha==a & 
               fpr$scale==scale & 
               fpr$npops==ktxt]<-table(sim_dat$cmh_pval<a)["TRUE"]/nrow(sim_dat)
+          
           fpr$fpr_cmh_woo[
             fpr$alpha==a & 
               fpr$scale==scale & 
               fpr$npops==ktxt]<-table(sim_dat$cmh_pval[
                 sim_dat$woo_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
                   sim_dat$woo_pval > 0.05,])
-          fpr$fpr_glm[
+          
+          fpr$fpr_binglm[
             fpr$alpha==a & 
               fpr$scale==scale & 
-              fpr$npops==ktxt]<-table(sim_dat$glm_l_pval[
-                sim_dat$glm_lxp_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
-                  sim_dat$glm_lxp_pval > 0.05,])
-          fpr$fpr_qglm_unp[
+              fpr$npops==ktxt]<-table(sim_dat$binglm_l_pval[
+                sim_dat$binglm_lxp_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
+                  sim_dat$binglm_lxp_pval > 0.05,])
+          
+          fpr$fpr_binglm_unp_ni[
+            fpr$alpha==a & 
+              fpr$scale==scale & 
+              fpr$npops==ktxt]<-table(sim_dat$binglm_l_p_pval_ni<a)["TRUE"]/nrow(sim_dat)
+          
+          fpr$fpr_qbinglm_unp[
             fpr$alpha==a & 
               fpr$scale==scale & 
               fpr$npops==ktxt]<-table(sim_dat$qglm_unp_l_pval<a)["TRUE"]/nrow(sim_dat)
+          
           fpr$fpr_gtest[
             fpr$alpha==a & 
               fpr$scale==scale & 
               fpr$npops==ktxt]<-table(sim_dat$g_lxc_pval[
                 sim_dat$g_lxcxpx_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
                   sim_dat$g_lxcxpx_pval > 0.05,])
-          fpr$fpr_ttest_unp[
+          
+          fpr$fpr_lm_unp[
             fpr$alpha==a & 
               fpr$scale==scale & 
               fpr$npops==ktxt]<-table(sim_dat$lm_unp_pval<a)["TRUE"]/nrow(sim_dat)
@@ -226,10 +259,11 @@ rm(sim_dat)
 fprdat_m<-melt(data=fprdat,
                measure.vars = c("fpr_cmh",
                                 "fpr_cmh_woo",
-                                "fpr_glm",
-                                "fpr_qglm_unp",
+                                "fpr_binglm",
+                                "fpr_binglm_ni",
+                                "fpr_qbinglm_unp",
                                 "fpr_gtest",
-                                "fpr_ttest_unp"))
+                                "fpr_lm_unp"))
 colnames(fprdat_m)<-c("alpha","scale","npops","test","fpr")
 head(fprdat_m)
 
@@ -253,10 +287,11 @@ tprdat<-data.frame(
   scale=vector(length=8),
   cmh_tp_rates=vector(length=8),
   cmh_woo_tp_rates=vector(length=8),
-  glm_l_tp_rates=vector(length=8),
-  qglm_unp_tp_rates=vector(length=8),
+  binglm_l_tp_rates=vector(length=8),
+  binglm_l_ni_tp_rates=vector(length=8),
+  qbinglm_unp_tp_rates=vector(length=8),
   gtest_tp_rates=vector(length=8),
-  ttest_unp_tp_rates=vector(length=8))
+  lm_unp_tp_rates=vector(length=8))
 
 # Load the data, perform calculations and store the results
 # results files are quite big so they are loaded one at a time.
@@ -296,16 +331,22 @@ for(k in c(2,3,4,10)){
                 sim_dat[sim_dat$tp == "1",])
       
       #Bin GLM
-      tprdat$glm_l_tp_rates[i]<-nrow(sim_dat[
-        sim_dat$glm_lxp_pval > 0.05 & 
+      tprdat$binglm_l_tp_rates[i]<-nrow(sim_dat[
+        sim_dat$binglm_lxp_pval > 0.05 & 
           sim_dat$tp == "1" & 
-          sim_dat$glm_l_pval < quantile(
-            sim_dat$glm_l_pval[
-              sim_dat$glm_lxp_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
+          sim_dat$binglm_l_pval < quantile(
+            sim_dat$binglm_l_pval[
+              sim_dat$binglm_lxp_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
+
+      tprdat$binglm_unp_ni_tp_rates[i]<-nrow(sim_dat[
+        sim_dat$tp == "1" &
+          sim_dat$binglm_l_p_pval_ni < quantile(
+            sim_dat$binglm_l_p_pval_ni,0.01,na.rm=TRUE),])/nrow(
+              sim_dat[sim_dat$tp == "1",])
       
       #Qbin-GLM
-      tprdat$qglm_unp_tp_rates[i]<-nrow(sim_dat[
+      tprdat$qbinglm_unp_tp_rates[i]<-nrow(sim_dat[
         sim_dat$tp == "1" &
           sim_dat$qglm_unp_l_pval < quantile(
             sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
@@ -320,7 +361,7 @@ for(k in c(2,3,4,10)){
                 sim_dat$g_lxcxpx_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
                   sim_dat[sim_dat$tp == "1",])
       
-      #T-test
+      #T-test (LM)
       tprdat$ttest_unp_tp_rates[i]<-nrow(sim_dat[
         sim_dat$tp == "1" &
           sim_dat$lm_unp_pval < quantile(
@@ -357,21 +398,28 @@ for(k in c(2,3,4,10)){
                 sim_dat$cmh_pval[
                   sim_dat$woo_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
                     sim_dat[sim_dat$tp == "1",])
-        
-          tprdat$glm_l_tp_rates[i]<-nrow(sim_dat[
-            sim_dat$glm_lxp_pval > 0.05 & 
+          #Bin GLM
+          tprdat$binglm_l_tp_rates[i]<-nrow(sim_dat[
+            sim_dat$binglm_lxp_pval > 0.05 & 
               sim_dat$tp == "1" & 
-              sim_dat$glm_l_pval < quantile(
-                sim_dat$glm_l_pval[
-                  sim_dat$glm_lxp_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
+              sim_dat$binglm_l_pval < quantile(
+                sim_dat$binglm_l_pval[
+                  sim_dat$binglm_lxp_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
                     sim_dat[sim_dat$tp == "1",])
-        
+          
+          tprdat$binglm_unp_ni_tp_rates[i]<-nrow(sim_dat[
+            sim_dat$tp == "1" &
+              sim_dat$binglm_l_p_pval_ni < quantile(
+                sim_dat$binglm_l_p_pval_ni,0.01,na.rm=TRUE),])/nrow(
+                  sim_dat[sim_dat$tp == "1",])
+          
+          #QBin GLM
           tprdat$qglm_unp_tp_rates[i]<-nrow(sim_dat[
             sim_dat$tp == "1" &
               sim_dat$qglm_unp_l_pval < quantile(
                 sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
                   sim_dat[sim_dat$tp == "1",])
-        
+          #G-test
           tprdat$gtest_tp_rates[i]<-nrow(sim_dat[
             sim_dat$g_lxcxpx_pval > 0.05 &
               sim_dat$tp == "1" &
@@ -379,7 +427,7 @@ for(k in c(2,3,4,10)){
                   sim_dat$g_lxc_pval[
                     sim_dat$g_lxcxpx_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
                       sim_dat[sim_dat$tp == "1",])
-        
+          #T-test (LM)
           tprdat$ttest_unp_tp_rates[i]<-nrow(sim_dat[
             sim_dat$tp == "1" &
               sim_dat$lm_unp_pval < quantile(
@@ -399,8 +447,9 @@ tprdat_m <- melt(tprdat,
                  measure.vars = c(
                    "cmh_tp_rates",
                    "cmh_woo_tp_rates",
-                   "glm_l_tp_rates",
-                   "qglm_unp_tp_rates",
+                   "binglm_l_tp_rates",
+                   "binglm_l_ni_tp_rates",
+                   "qbinglm_unp_tp_rates",
                    "gtest_tp_rates",
                    "ttest_unp_tp_rates")
                  )
