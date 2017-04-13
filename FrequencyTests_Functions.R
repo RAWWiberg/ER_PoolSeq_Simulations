@@ -587,7 +587,7 @@ data_gen <- function(als=100,k=2,l=2,
         family = "quasibinomial")
 
       # Run GLM with quasibinomial error distribution: [unpaired]
-      qubinglm_res_unp<-glm(cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$tr_l,
+      qbinglm_res_unp<-glm(cbind(d$A_Cnt,d$Tot_Cnt-d$A_Cnt)~d$tr_l,
         family = "quasibinomial")
 
       # Run an lm ("t-test"): [unpaired]
@@ -644,13 +644,13 @@ data_gen <- function(als=100,k=2,l=2,
 
       # Quasibinomial GLM results: [paired]
       # "treatment" effect will be last p-value
-      row<-nrow(summary(quasbinom_res_p)$coefficients)
-      qbinglm_l_p_pval[i]<-summary(quasbinom_res_p)$coefficients[row,4]
+      row<-nrow(summary(qbinglm_res_p)$coefficients)
+      qbinglm_l_p_pval[i]<-summary(qbinglm_res_p)$coefficients[row,4]
      
       # Quasibinomial GLM results: [unpaired]
       # "treatment" effect will be last p-value
-      row<-nrow(summary(quasbinom_res_unp)$coefficients)
-      qbinglm_l_unp_pval[i]<-summary(quasbinom_res_unp)$coefficients[
+      row<-nrow(summary(qbinglm_res_unp)$coefficients)
+      qbinglm_l_unp_pval[i]<-summary(qbinglm_res_unp)$coefficients[
         row,4]
      
       # LM (t-test) results: [unpaired]
@@ -698,16 +698,16 @@ data_gen <- function(als=100,k=2,l=2,
                          "g_lxc_pval"=g_lxc_pval,
                          "g_lxcxpx_g"=g_lxcxpx_g,
                          "g_lxc_g"=g_lxc_g,
-                         "binglm_lxp_pval"=glm_lxpx_pval,
-                         "binglm_l_pval"=glm_l_pval,
-                         "binglm_l_dev"=glm_l_dev,
-                         "binglm_lxp_dev"=glm_lxpx_dev,
-                         "binglm_w"=glm_w,
-                         "binglm_l_p_pval_ni"=binom_l_p_pval,
+                         "binglm_lxp_pval"=binglm_lxpx_pval,
+                         "binglm_l_pval"=binglm_l_pval,
+                         "binglm_l_dev"=binglm_l_dev,
+                         "binglm_lxp_dev"=binglm_lxpx_dev,
+                         "binglm_w"=binglm_w,
+                         "binglm_l_p_pval_ni"=binglm_l_p_pval_ni,
                          "lm_unp_pval"=m_lm_unp_pval,
                          "lm_p_pval"=m_lm_p_pval,
-                         "qbinglm_p_l_pval"=quasbinom_l_p_pval,
-                         "qbinglm_unp_l_pval"=quasbinom_l_unp_pval,
+                         "qbinglm_p_l_pval"=qbinglm_l_p_pval,
+                         "qbinglm_unp_l_pval"=qbinglm_l_unp_pval,
                          "sd_diffs"=sd_diffs,
                          "mean_diffs"=mean_diffs,
                          "diff_s"=diff_s,
