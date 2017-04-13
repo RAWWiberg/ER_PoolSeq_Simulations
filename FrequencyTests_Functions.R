@@ -626,7 +626,7 @@ data_gen <- function(als=100,k=2,l=2,
       
       # (with interaction)
       # Check if the Binomial GLM has produced any warnings
-      if(is(binom_res[[2]],"warning")){
+      if(is(binglm_res[[2]],"warning")){
         glm_d <- binglm_res[[1]]
         binglm_lxpx_pval[i] <- glm_d[[5]][4]
         binglm_l_pval[i] <- glm_d[[5]][3]
