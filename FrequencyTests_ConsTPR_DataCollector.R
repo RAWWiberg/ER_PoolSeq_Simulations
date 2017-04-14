@@ -14,7 +14,7 @@
 #---------------#
 # Load libraries
 #---------------#
-library(ggplot2)
+#library(ggplot2)
 #install.packages("vcd")
 #library(vcd) # Another version of Woolf-test is available from here.
 #install.packages("dplyr")
@@ -27,20 +27,25 @@ library(reshape) # melt() function from here.
 library(DescTools) # BreslowDayTest from here
 #install.packages("pscl")
 library(pscl)
-#source("http://bioconductor.org/biocLite.R")
-#biocLite("qvalue")
-library(qvalue)
 # Set FST and mcov
 args <- commandArgs(trailingOnly = TRUE)
-fst=args[1]#0.1
-mcov=args[2]#200
+fst=as.numeric(args[1])#0.1
+mcov=as.numeric(args[2])#200
+dir=args[3]
+K<-c(4,10)
 #-----------------------------------#
 # SOURCE THE FUNCTIONS:
 # From FrequencyTests_Functions.R
 #-----------------------------------#
-source("~/Desktop/Data/RData/RScripts/FrequencyTests_Functions.R")
+initial.options <- commandArgs(trailingOnly = FALSE)
+file.arg.name <- "--file="
+script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
+scriptdir<-dirname(script.name)
+source(paste(scriptdir,"/FrequencyTests_Functions.R",sep=""))
+
 # Set the working directory
-setwd("~/Desktop/Data/allele_frequency_analysis_project/data/")
+cat("Looking for data in: ",dir,"\n")
+setwd(dir)
 
 #----------------------------------------#
 # Consistency of True Positive Rate (TPR)#
@@ -50,15 +55,15 @@ setwd("~/Desktop/Data/allele_frequency_analysis_project/data/")
 tprdatcons<-data.frame(
   npops=vector(length=28),
   cmh_tp_rates=vector(length=28),
-  qglm_unp_tp_rates=vector(length=28),
-  ttest_unp_tp_rates=vector(length=28),
+  qbinglm_unp_tp_rates=vector(length=28),
+  lm_unp_tp_rates=vector(length=28),
   sim=vector(length=28),
   snps=vector(length=28))
 
 # Load the data, perform calculations and store the results
 # results files are quite big so they are loaded one at a time.
 i <- 1
-for(k in c(4,10)){
+for(k in K){
   ktxt<-paste("k=",k,sep="")
   k <- as.character(k)
   for(snps in c(10000,1000000)){
@@ -73,34 +78,40 @@ for(k in c(4,10)){
           "k=",k,
           "_fst=",fst,
           "_N=100_mcov=",mcov,
-          "_res=1_scale=100_SNPs=10000_p_tp=0.01_sel_diff=0.2_",
+          "_res=1_scale=100_SNPs=10000_p_tp=0.01_sel_diff=0.2_SIM",
           sim,"/FrequencyTest_Simulations_k=",k,
           "_fst=",fst,
           "_N=100_mcov=",mcov,
-          "_res=1_scale=100_SNPs=10000_p_tp=0.01_sel_diff=0.2_",
+          "_res=1_scale=100_SNPs=10000_p_tp=0.01_sel_diff=0.2_SIM",
           sim,".csv",
           sep=""),
           sep = "\t",header = TRUE)
           # TPR = Proportion of true positives that are in the top 1%.
-          # CMH-test
+        # CMH-test
         tprdatcons$cmh_tp_rates[i]<-nrow(sim_dat[
           sim_dat$tp == "1" &
             sim_dat$cmh_pval < quantile(
               sim_dat$cmh_pval,0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
-        tprdatcons$qglm_unp_tp_rates[i]<-nrow(sim_dat[
+        # QB-GLM
+        tprdatcons$qbinglm_unp_tp_rates[i]<-nrow(sim_dat[
           sim_dat$tp == "1" &
-            sim_dat$qglm_unp_l_pval < quantile(
-              sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
+            sim_dat$qbinglm_unp_l_pval < quantile(
+              sim_dat$qbinglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
-        tprdatcons$ttest_unp_tp_rates[i]<-nrow(sim_dat[
+        #LM (t-test)
+        tprdatcons$lm_unp_tp_rates[i]<-nrow(sim_dat[
           sim_dat$tp == "1" &
             sim_dat$lm_unp_pval < quantile(
               sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
+        
         tprdatcons$npops[i]=ktxt
+        
         tprdatcons$sim[i]=simtxt
+        
         tprdatcons$snps[i]=snptxt
+        
         i<-i+1
       }
     }else if(snps == 1000000){
@@ -113,33 +124,39 @@ for(k in c(4,10)){
           "k=",k,
           "_fst=",fst,
           "_N=100_mcov=",mcov,
-          "_res=1_scale=100_SNPs=1000000_p_tp=0.01_sel_diff=0.2_",
+          "_res=1_scale=100_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIM",
           sim,"/FrequencyTest_Simulations_k=",k,
           "_fst=",fst,
           "_N=100_mcov=",mcov,
-          "_res=1_scale=100_SNPs=1000000_p_tp=0.01_sel_diff=0.2_",
+          "_res=1_scale=100_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIM",
           sim,".csv",
           sep=""),
           sep = "\t",header = TRUE)
         # TPR = Proportion of true positives that are in the top 1%.
+        
         # CMH-test
         tprdatcons$cmh_tp_rates[i]<-nrow(sim_dat[
           sim_dat$tp == "1" &
             sim_dat$cmh_pval < quantile(
               sim_dat$cmh_pval,0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
-        tprdatcons$qglm_unp_tp_rates[i]<-nrow(sim_dat[
+        # QB-GLM
+        tprdatcons$qbinglm_unp_tp_rates[i]<-nrow(sim_dat[
           sim_dat$tp == "1" &
             sim_dat$qglm_unp_l_pval < quantile(
               sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
+        # LM (t-test)
         tprdatcons$ttest_unp_tp_rates[i]<-nrow(sim_dat[
           sim_dat$tp == "1" &
             sim_dat$lm_unp_pval < quantile(
               sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
+        
         tprdatcons$npops[i]=ktxt
+        
         tprdatcons$sim[i]=simtxt
+        
         tprdatcons$snps[i]=snptxt
         i<-i+1
       }
@@ -165,10 +182,10 @@ tprdatcons_m
 
 # Save the data.frame as an R object to avoid having to perform
 # calculations again.
-write.table(tprdatcons_m,paste("FST="fst,
+write.table(tprdatcons_m,paste("FST=",fst,
 			   "_mcov=",mcov,
 			   "tprdatcons_melted.tab"),quote=FALSE,row.names=FALSE,sep="\t")
-write.table(tprdatcons,paste("FST="fst,
+write.table(tprdatcons,paste("FST=",fst,
 			   "_mcov=",mcov,
 			   "tprdatcons.tab"),quote=FALSE,row.names=FALSE,sep="\t")
 

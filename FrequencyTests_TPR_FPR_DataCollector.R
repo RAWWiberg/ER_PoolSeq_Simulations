@@ -14,7 +14,7 @@
 #---------------#
 # Load libraries
 #---------------#
-library(ggplot2)
+#library(ggplot2)
 #install.packages("vcd")
 #library(vcd) # Another version of Woolf-test is available from here.
 #install.packages("dplyr")
@@ -27,9 +27,6 @@ library(reshape) # melt() function from here.
 library(DescTools) # BreslowDayTest from here
 #install.packages("pscl")
 library(pscl)
-#source("http://bioconductor.org/biocLite.R")
-#biocLite("qvalue")
-library(qvalue)
 # Set FST and mcov
 args <- commandArgs(trailingOnly = TRUE)
 fst=as.numeric(args[1])#0.1
@@ -281,6 +278,11 @@ rm(sim_dat,fprdat,fprdat_m)
 #-------------------------#
 # True Positive Rate (TPR)#
 #-------------------------#
+# Calculated as the proportion of true positives that have a 
+# p-value < the 1st percentile of the p-value distribution
+# i.e. the proportion of true positives that lie in the tail of
+# the p-value distribution.
+
 # Initialise a dataframe to store data
 tprdat<-data.frame(
   npops=vector(length=8),
@@ -348,8 +350,8 @@ for(k in c(2,3,4,10)){
       #Qbin-GLM
       tprdat$qbinglm_unp_tp_rates[i]<-nrow(sim_dat[
         sim_dat$tp == "1" &
-          sim_dat$qglm_unp_l_pval < quantile(
-            sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
+          sim_dat$qbinglm_unp_l_pval < quantile(
+            sim_dat$qbinglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
               sim_dat[sim_dat$tp == "1",])
       
       #G-test
@@ -362,12 +364,14 @@ for(k in c(2,3,4,10)){
                   sim_dat[sim_dat$tp == "1",])
       
       #T-test (LM)
-      tprdat$ttest_unp_tp_rates[i]<-nrow(sim_dat[
+      tprdat$lm_unp_tp_rates[i]<-nrow(sim_dat[
         sim_dat$tp == "1" &
           sim_dat$lm_unp_pval < quantile(
             sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
               sim_dat[sim_dat$tp == "1",])
+      
       tprdat$npops[i]=ktxt
+      
       tprdat$scale[i]="CT=var."
       i<-i+1
       } else if(res == 1){
@@ -416,8 +420,8 @@ for(k in c(2,3,4,10)){
           #QBin GLM
           tprdat$qglm_unp_tp_rates[i]<-nrow(sim_dat[
             sim_dat$tp == "1" &
-              sim_dat$qglm_unp_l_pval < quantile(
-                sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
+              sim_dat$qbinglm_unp_l_pval < quantile(
+                sim_dat$qbinglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
                   sim_dat[sim_dat$tp == "1",])
           #G-test
           tprdat$gtest_tp_rates[i]<-nrow(sim_dat[
@@ -428,12 +432,14 @@ for(k in c(2,3,4,10)){
                     sim_dat$g_lxcxpx_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
                       sim_dat[sim_dat$tp == "1",])
           #T-test (LM)
-          tprdat$ttest_unp_tp_rates[i]<-nrow(sim_dat[
+          tprdat$lm_unp_tp_rates[i]<-nrow(sim_dat[
             sim_dat$tp == "1" &
               sim_dat$lm_unp_pval < quantile(
                 sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
                   sim_dat[sim_dat$tp == "1",])
+          
           tprdat$npops[i]=ktxt
+          
           tprdat$scale[i]=paste("CT=",sc)
           i<-i+1
         }
@@ -451,7 +457,7 @@ tprdat_m <- melt(tprdat,
                    "binglm_l_ni_tp_rates",
                    "qbinglm_unp_tp_rates",
                    "gtest_tp_rates",
-                   "ttest_unp_tp_rates")
+                   "lm_unp_tp_rates")
                  )
 colnames(tprdat_m)<-c("npops","scale","test","tpr")
 
@@ -464,4 +470,3 @@ write.table(tprdat,paste("FST=",fst,
 			   "_mcov=",mcov,
 			   "tprdat.tab"),quote=FALSE,row.names=FALSE,sep="\t")
 #save(list = ls(all=TRUE), file = "tpr.RData",envir=.GlobalEnv)
-
