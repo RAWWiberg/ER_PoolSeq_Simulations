@@ -143,11 +143,11 @@ for(k in K){
         # QB-GLM
         tprdatcons$qbinglm_unp_tp_rates[i]<-nrow(sim_dat[
           sim_dat$tp == "1" &
-            sim_dat$qglm_unp_l_pval < quantile(
-              sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
+            sim_dat$qbinglm_unp_l_pval < quantile(
+              sim_dat$qbinglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
         # LM (t-test)
-        tprdatcons$ttest_unp_tp_rates[i]<-nrow(sim_dat[
+        tprdatcons$lm_unp_tp_rates[i]<-nrow(sim_dat[
           sim_dat$tp == "1" &
             sim_dat$lm_unp_pval < quantile(
               sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
@@ -174,8 +174,8 @@ tprdatcons$npops <- factor(tprdatcons$npops,
 tprdatcons_m <- melt(tprdatcons,
                  measure.vars = c(
                    "cmh_tp_rates",
-                   "qglm_unp_tp_rates",
-                   "ttest_unp_tp_rates"))
+                   "qbinglm_unp_tp_rates",
+                   "lm_unp_tp_rates"))
 colnames(tprdatcons_m)<-c("npops","sim","snps","test","tpr")
 
 tprdatcons_m
@@ -184,10 +184,10 @@ tprdatcons_m
 # calculations again.
 write.table(tprdatcons_m,paste("FST=",fst,
 			   "_mcov=",mcov,
-			   "tprdatcons_melted.tab"),quote=FALSE,row.names=FALSE,sep="\t")
+			   "_tprdatcons_melted.tab"),quote=FALSE,row.names=FALSE,sep="\t")
 write.table(tprdatcons,paste("FST=",fst,
 			   "_mcov=",mcov,
-			   "tprdatcons.tab"),quote=FALSE,row.names=FALSE,sep="\t")
+			   "_tprdatcons.tab"),quote=FALSE,row.names=FALSE,sep="\t")
 
 #save(list = ls(all=TRUE), file = "tprcons.RData",envir=.GlobalEnv)
 

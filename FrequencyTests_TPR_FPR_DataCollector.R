@@ -62,7 +62,7 @@ fprdat<-data.frame(alpha=vector(),
                    fpr_cmh_woo=vector(),
                    fpr_qbinglm_unp=vector(),
                    fpr_gtest=vector(),
-                   fpr_ttest_unp=vector(),
+                   fpr_lm_unp=vector(),
                    scale=vector(),
                    npops=vector())
 # Load the data, perform calculations and store the results
@@ -190,7 +190,7 @@ for(k in c(2,3,4,10)){
                         fpr_cmh_woo=vector(
                           length=length(alpha)*length(unique(sim_dat$scale))),
                         
-                        fpr_qglm_unp=vector(
+                        fpr_qbinglm_unp=vector(
                           length=length(alpha)*length(unique(sim_dat$scale))),
                         
                         fpr_gtest=vector(
@@ -223,7 +223,7 @@ for(k in c(2,3,4,10)){
                 sim_dat$binglm_lxp_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
                   sim_dat$binglm_lxp_pval > 0.05,])
           
-          fpr$fpr_binglm_unp_ni[
+          fpr$fpr_binglm_ni[
             fpr$alpha==a & 
               fpr$scale==scale & 
               fpr$npops==ktxt]<-table(sim_dat$binglm_l_p_pval_ni<a)["TRUE"]/nrow(sim_dat)
@@ -231,7 +231,7 @@ for(k in c(2,3,4,10)){
           fpr$fpr_qbinglm_unp[
             fpr$alpha==a & 
               fpr$scale==scale & 
-              fpr$npops==ktxt]<-table(sim_dat$qglm_unp_l_pval<a)["TRUE"]/nrow(sim_dat)
+              fpr$npops==ktxt]<-table(sim_dat$qbinglm_unp_l_pval<a)["TRUE"]/nrow(sim_dat)
           
           fpr$fpr_gtest[
             fpr$alpha==a & 
@@ -269,10 +269,10 @@ head(fprdat_m)
 #save(list = ls(all=TRUE), file = "fpr.RData",envir=.GlobalEnv)
 write.table(fprdat_m,paste("FST=",fst,
 			   "_mcov=",mcov,
-			   "fprdat_melted.tab"),quote=FALSE,row.names=FALSE,sep="\t")
+			   "_fprdat_melted.tab",sep=""),quote=FALSE,row.names=FALSE,sep="\t")
 write.table(fprdat,paste("FST=",fst,
 			   "_mcov=",mcov,
-			   "fprdat.tab"),quote=FALSE,row.names=FALSE,sep="\t")
+			   "_fprdat.tab",sep=""),quote=FALSE,row.names=FALSE,sep="\t")
 rm(sim_dat,fprdat,fprdat_m)
 
 #-------------------------#
@@ -285,15 +285,15 @@ rm(sim_dat,fprdat,fprdat_m)
 
 # Initialise a dataframe to store data
 tprdat<-data.frame(
-  npops=vector(length=8),
-  scale=vector(length=8),
-  cmh_tp_rates=vector(length=8),
-  cmh_woo_tp_rates=vector(length=8),
-  binglm_l_tp_rates=vector(length=8),
-  binglm_l_ni_tp_rates=vector(length=8),
-  qbinglm_unp_tp_rates=vector(length=8),
-  gtest_tp_rates=vector(length=8),
-  lm_unp_tp_rates=vector(length=8))
+  npops=vector(length=16),
+  scale=vector(length=16),
+  cmh_tp_rates=vector(length=16),
+  cmh_woo_tp_rates=vector(length=16),
+  binglm_l_tp_rates=vector(length=16),
+  binglm_l_ni_tp_rates=vector(length=16),
+  qbinglm_unp_tp_rates=vector(length=16),
+  gtest_tp_rates=vector(length=16),
+  lm_unp_tp_rates=vector(length=16))
 
 # Load the data, perform calculations and store the results
 # results files are quite big so they are loaded one at a time.
@@ -341,7 +341,7 @@ for(k in c(2,3,4,10)){
               sim_dat$binglm_lxp_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
                 sim_dat[sim_dat$tp == "1",])
 
-      tprdat$binglm_unp_ni_tp_rates[i]<-nrow(sim_dat[
+      tprdat$binglm_l_ni_tp_rates[i]<-nrow(sim_dat[
         sim_dat$tp == "1" &
           sim_dat$binglm_l_p_pval_ni < quantile(
             sim_dat$binglm_l_p_pval_ni,0.01,na.rm=TRUE),])/nrow(
@@ -411,7 +411,7 @@ for(k in c(2,3,4,10)){
                   sim_dat$binglm_lxp_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
                     sim_dat[sim_dat$tp == "1",])
           
-          tprdat$binglm_unp_ni_tp_rates[i]<-nrow(sim_dat[
+          tprdat$binglm_l_ni_tp_rates[i]<-nrow(sim_dat[
             sim_dat$tp == "1" &
               sim_dat$binglm_l_p_pval_ni < quantile(
                 sim_dat$binglm_l_p_pval_ni,0.01,na.rm=TRUE),])/nrow(
@@ -465,8 +465,8 @@ colnames(tprdat_m)<-c("npops","scale","test","tpr")
 # calculations again.
 write.table(tprdat_m,paste("FST=",fst,
 			   "_mcov=",mcov,
-			   "tprdat_melted.tab"),quote=FALSE,row.names=FALSE,sep="\t")
+			   "_tprdat_melted.tab",sep=""),quote=FALSE,row.names=FALSE,sep="\t")
 write.table(tprdat,paste("FST=",fst,
 			   "_mcov=",mcov,
-			   "tprdat.tab"),quote=FALSE,row.names=FALSE,sep="\t")
+			   "_tprdat.tab",sep=""),quote=FALSE,row.names=FALSE,sep="\t")
 #save(list = ls(all=TRUE), file = "tpr.RData",envir=.GlobalEnv)
