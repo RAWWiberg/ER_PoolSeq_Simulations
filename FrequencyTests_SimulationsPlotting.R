@@ -34,10 +34,10 @@ library(qvalue)
 # SOURCE THE FUNCTIONS:
 # From FrequencyTests_Functions.R
 #-----------------------------------#
-source("~/packages/ER_PoolSeq_Simulations/FrequencyTests_Functions.R")
-source("~/RData/RScripts/ggplot_theme.R")
+source("~/Packages/ER_PoolSeq_Simulations/FrequencyTests_Functions.R")
+source("~/Desktop/Data/RData/RScripts/ggplot_theme.R")
 # Set the working directory
-setwd("~/PhD/allele_frequency_tests/data/")
+setwd("~/Desktop/Data/allele_frequency_analysis_project/simulation_data/")
 alpha<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5)
 #----------#
 # Plotting #
@@ -61,7 +61,17 @@ tprdat<-read.table(paste("FST=",fst,"_mcov=200_tprdat.tab",sep=""),
 levels(tprdat_m$npops)
 tprdat_m$npops<-factor(tprdat_m$npops,levels=c("k=2","k=3","k=4","k=10"))
 
-tprconsdat<-read.table("tprcons.RData")
+tprconsdat_m<-read.table("FST=0.2_mcov=200_tprdatcons_melted.tab",
+                         header=TRUE,sep="\t")
+levels(tprconsdat_m$npops)
+levels(tprconsdat_m$test)
+# Re-order the npops column
+tprconsdat_m$npops<-factor(tprconsdat_m$npops,levels=c("k=4","k=10"))
+# Re-order the test column
+tprconsdat_m$test<-factor(tprconsdat_m$test,levels=c("cmh_tp_rates",
+                                                     "qbinglm_unp_tp_rates",
+                                                     "lm_unp_tp_rates"))
+
 #----------#
 # Plot FPR #
 #----------#
@@ -147,11 +157,11 @@ tp_plot + my.theme + theme(
 # Plot consistency of FPR #
 #-------------------------#
 tpconsplot<-ggplot()+
-  geom_boxplot(data=tprdatcons_m,aes(npops,tpr,fill=test))+
+  geom_boxplot(data=tprconsdat_m,aes(npops,tpr,fill=test))+
   xlab("Nr Replicated Treatment Lines")+
   ylab("True Positive Rate")+
   scale_fill_manual("",
-                      values=c('#1b9e77','#e7298a','#e6ab02'),
+                      values=c('#1b9e77','black','#e6ab02'),
                       labels=c("CMH-test","Quasibinomial\nGLM",
                                "LM"))+
   facet_wrap(~snps)
@@ -226,7 +236,7 @@ sd_v_mean_plot <- ggplot() +
              alpha = 1/10) +
   xlab("Mean Allele Frequency Difference") +
   ylab("SD of Allele Frequency Differences") +
-  facet_grid(npops~scale,scales="free_x")
+  facet_grid(scale~npops,scales="free_x")
 
 # Get correlation coefficients and p-values as text for plots
 # ####
@@ -434,12 +444,17 @@ print(text_dat)
 # ####
 
 # Plot Figure S3 with text labels 
-sd_v_mean_plot + my.theme+ theme(axis.text = element_text(size=12))+
+sd_v_mean_plot<-sd_v_mean_plot + 
+  my.theme+ theme(axis.text = element_text(size=12))+
   geom_text(data=text_dat,aes(x=0.5,y=0.9,
                               label=paste("p = ",p,sep="")),size=4) +
   geom_text(data=text_dat,aes(x=0.5,y=1,
                               label=paste("rho = ",r,sep="")),size=4)+
   scale_x_continuous(breaks = c(-0.5,0,0.5))
+ggsave("FigureS3_mean_vs_sd.png",
+       plot=sd_v_mean_plot,
+       device = "png",
+       width = 8, height = 8)
 
 #------------------------------------------------------------------------#
 # Plot the histogram of the mean allele frequency differences (Figure S1)#
@@ -448,9 +463,14 @@ mean_hist_plot <- ggplot() +
   geom_histogram(data=data, aes(mean_diffs)) +
   xlab("Mean Allele Frequency Difference") +
   ylab("Count") +
-  facet_grid(npops~scale,scales="free_x")
+  facet_grid(scale~npops,scales="free_x")
 
-mean_hist_plot + my.theme+ theme(axis.text = element_text(size=12))
+mean_hist_plot<-mean_hist_plot + 
+  my.theme+ theme(axis.text = element_text(size=12))
+ggsave("FigureS1_mean_hist.png",
+       plot=mean_hist_plot,
+       device = "png",
+       width = 8, height = 8)
 
 #-------------------------------------------------------------------------#
 # Plot the histogram of the SD of allele frequency differences (Figure S2)#
@@ -459,8 +479,13 @@ sd_hist_plot <- ggplot() +
   geom_histogram(data=data, aes(sd_diffs)) +
   xlab("SD Allele Frequency Difference") +
   ylab("Count") +
-  facet_grid(npops~scale,scales="free_x")
+  facet_grid(scale~npops,scales="free_x")
 
-sd_hist_plot + my.theme+ theme(axis.text = element_text(size=12))
+sd_hist_plot <- sd_hist_plot + 
+  my.theme+ theme(axis.text = element_text(size=12))
+ggsave("FigureS2_sd_hist.png",
+       plot=sd_hist_plot,
+       device = "png",
+       width = 8, height = 8)
 
 
