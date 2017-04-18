@@ -33,6 +33,7 @@ fst=as.numeric(args[1])#0.1
 mcov=as.numeric(args[2])#200
 dir=args[3]
 K<-c(4,10)
+options(scipen=6)
 #-----------------------------------#
 # SOURCE THE FUNCTIONS:
 # From FrequencyTests_Functions.R
@@ -78,11 +79,11 @@ for(k in K){
           "k=",k,
           "_fst=",fst,
           "_N=100_mcov=",mcov,
-          "_res=1_scale=100_SNPs=10000_p_tp=0.01_sel_diff=0.2_SIM",
+          "_res=0_SNPs=10000_p_tp=0.01_sel_diff=0.2_SIM",
           sim,"/FrequencyTest_Simulations_k=",k,
           "_fst=",fst,
           "_N=100_mcov=",mcov,
-          "_res=1_scale=100_SNPs=10000_p_tp=0.01_sel_diff=0.2_SIM",
+          "_res=0_SNPs=10000_p_tp=0.01_sel_diff=0.2_SIM",
           sim,".csv",
           sep=""),
           sep = "\t",header = TRUE)
@@ -124,11 +125,11 @@ for(k in K){
           "k=",k,
           "_fst=",fst,
           "_N=100_mcov=",mcov,
-          "_res=1_scale=100_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIM",
+          "_res=0_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIM",
           sim,"/FrequencyTest_Simulations_k=",k,
           "_fst=",fst,
           "_N=100_mcov=",mcov,
-          "_res=1_scale=100_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIM",
+          "_res=0_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIM",
           sim,".csv",
           sep=""),
           sep = "\t",header = TRUE)
