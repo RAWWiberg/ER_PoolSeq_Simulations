@@ -3,7 +3,7 @@
 #                                                       #
 # Author: R. Axel W. Wiberg                             #
 # Created: Jan 2017                                     #
-# Last Modified: 04.05.2017                             #
+# Last Modified: 18.05.2017                             #
 #                                                       # 
 #-------------------------------------------------------#
 
@@ -34,23 +34,29 @@ library(qvalue)
 # SOURCE THE FUNCTIONS:
 # From FrequencyTests_Functions.R
 #-----------------------------------#
-source("~/Desktop/Data/RData/RScripts/FrequencyTests_Functions.R")
+source("~/packages/ER_PoolSeq_Simulations/FrequencyTests_Functions.R")
+source("~/RData/RScripts/ggplot_theme.R")
 # Set the working directory
-setwd("~/Desktop/Data/allele_frequency_analysis_project/simulation_data/")
+setwd("~/PhD/allele_frequency_tests/data/")
 alpha<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5)
 #----------#
 # Plotting #
 #----------#
 # Load data
-fprdat_m<-read.table("FST=0.1_mcov=200_fprdat_melted.tab",header=TRUE,sep="\t")
-fprdat<-read.table("FST=0.1_mcov=200_fprdat.tab",header=TRUE,sep="\t")
+fst<-0.1
+fprdat_m<-read.table(paste("FST=",fst,"_mcov=200_fprdat_melted.tab",sep=""),
+                     header=TRUE,sep="\t")
+fprdat<-read.table(paste("FST=",fst,"_mcov=200_fprdat.tab",sep=""),
+                   header=TRUE,sep="\t")
 head(fprdat_m)
 # Re-order the npops column
 levels(fprdat_m$npops)
 fprdat_m$npops<-factor(fprdat_m$npops,levels=c("k=2","k=3","k=4","k=10"))
 
-tprdat_m<-read.table("FST=0.1_mcov=200_tprdat_melted.tab",header=TRUE,sep="\t")
-tprdat<-read.table("FST=0.1_mcov=200_tprdat.tab",header=TRUE,sep="\t")
+tprdat_m<-read.table(paste("FST=",fst,"_mcov=200_tprdat_melted.tab",sep=""),
+                     header=TRUE,sep="\t")
+tprdat<-read.table(paste("FST=",fst,"_mcov=200_tprdat.tab",sep=""),
+                   header=TRUE,sep="\t")
 # Re-order the npops column
 levels(tprdat_m$npops)
 tprdat_m$npops<-factor(tprdat_m$npops,levels=c("k=2","k=3","k=4","k=10"))
@@ -89,6 +95,7 @@ fpr_v_alp<-ggplot(data=fprdat_m)+
   facet_grid(scale~npops)
 fpr_v_alp +annotation_logticks() + my.theme + 
   theme(axis.text.x = element_text(size = 10,angle=45,hjust=1,vjust=1),
+#        panel.grid.major = element_line(colour = "grey"),
         axis.text.y = element_text(size = 10),
         strip.text = element_text(size = 10),
         legend.text = element_text(size = 10),
@@ -100,22 +107,30 @@ fpr_v_alp +annotation_logticks() + my.theme +
 # Plot TPR #
 #----------#
 head(tprdat_m)
+levels(tprdat_m$test)
+tprdat_m$test<-factor(tprdat_m$test,levels=c("binglm_l_tp_rates",
+                                             "binglm_l_ni_tp_rates",
+                                             "cmh_tp_rates",
+                                             "cmh_woo_tp_rates",
+                                             "gtest_tp_rates",
+                                             "lm_unp_tp_rates",
+                                             "qbinglm_unp_tp_rates"))
 tp_plot<-ggplot(data=tprdat_m)+
   geom_point(aes(x=npops,y=tpr,shape=test,colour=test),
              size = 3,
              position=position_jitter(width = 0.05))+
   xlab("Nr. Replicated Treatment Lines")+
   ylab("True Positive Rate")+
-#  scale_shape_manual("",labels = c("Binomial\nGLM (1)","Binomial\nGLM (2)",
-#                                   "CMH-test","CMH-test+Woolf-test",
-#                                   "G-test","LM","Quasibinomial\nGLM"),
-#                     values=c(16,17,15,3,7,10,23))+
-#  scale_colour_manual("",labels = c("Binomial\nGLM (1)","Binomial\nGLM (2)",
-#                                    "CMH-test","CMH-test+Woolf-test",
-#                                    "G-test","LM","Quasibinomial\nGLM"),
-#                      values=c('#1b9e77','#d95f02','#7570b3',
-#                               '#e7298a','#66a61e','#e6ab02',
-#                               'black'))+
+  scale_shape_manual("",labels = c("Binomial\nGLM (1)","Binomial\nGLM (2)",
+                                   "CMH-test","CMH-test+Woolf-test",
+                                   "G-test","LM","Quasibinomial\nGLM"),
+                     values=c(16,17,15,3,7,10,23))+
+  scale_colour_manual("",labels = c("Binomial\nGLM (1)","Binomial\nGLM (2)",
+                                    "CMH-test","CMH-test+Woolf-test",
+                                    "G-test","LM","Quasibinomial\nGLM"),
+                      values=c('#1b9e77','#d95f02','#7570b3',
+                               '#e7298a','#66a61e','#e6ab02',
+                               'black'))+
   facet_grid(scale~.)
 
 tp_plot + my.theme + theme(
@@ -155,8 +170,10 @@ qbglmdat<-read.table("qbglm_tp0.tab",
                      sep="\t",
                      header=FALSE)
 colnames(qbglmdat)<-c("pval","npops","scale")
+# reorder npops column
+qbglmdat$npops<-factor(qbglmdat$npops,levels=c("k=2","k=3","k=4","k=10"))
 
-# Plot the histogram
+# Plot the histogram (FIGURE S5)
 qbglm_his<-ggplot()+
   geom_histogram(data=qbglmdat,aes(pval),binwidth=0.05)+
   xlab("p-value")+
@@ -168,32 +185,37 @@ qbglm_his + my.theme +
         axis.text.y = element_text(size = 12),
         strip.text = element_text(size = 12),
         legend.text = element_text(size = 12))
-
+rm(qbglm_dat)
 # Load the data: CMH-test p-values
 cmhdat<-read.table("cmh_tp0.tab",
                    sep="\t",
                    header=FALSE)
 colnames(cmhdat)<-c("pval","npops","scale")
-# Plot the histogram
+# reorder npops column
+cmhdat$npops<-factor(cmhdat$npops,levels=c("k=2","k=3","k=4","k=10"))
+# Plot the histogram (FIGURE S4)
 cmh_his<-ggplot()+
   geom_histogram(data=cmhdat,
                  aes(pval),binwidth=0.05)+
   xlab("p-value")+
   ylab("Count")+
   facet_grid(scale~npops)
-cmh_his + my.theme + 
-  theme(axis.text.x = element_text(size = 12,
-                                   angle=45,hjust=1,vjust=1),
-        axis.text.y = element_text(size = 12),
-        strip.text = element_text(size = 12),
-        legend.text = element_text(size = 12))
-
+  cmh_his + my.theme + 
+    theme(axis.text.x = element_text(size = 12,
+                                     angle=45,hjust=1,vjust=1),
+          axis.text.y = element_text(size = 12),
+          strip.text = element_text(size = 12),
+          legend.text = element_text(size = 12))
+rm(cmhdat)
 #-------------------------------------------------------------------------#
 # Plot Mean vs. SD of allele frequency differences across all simulations #
 #-------------------------------------------------------------------------#
 # Load the data
 data<-read.table("mean_sd_tp0.tab", header = FALSE)
-colnames(data)<-c("sd_diffs","mean_diffs","npops","scale","tp")
+colnames(data)<-c("sd_diffs","mean_diffs","npops","scale")
+# reorder npops column
+data$npops<-factor(data$npops,levels=c("k=2","k=3","k=4","k=10"))
+
 # Plot distributions of mean_diffs and sd_diffs
 #----------------------------------------------------------------------#
 # Plot mean_diffs vs sd_diffs and correlation coefficients (Figure S3) #
