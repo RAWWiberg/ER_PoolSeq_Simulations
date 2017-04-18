@@ -3,7 +3,7 @@
 #                                                       #
 # Author: R. Axel W. Wiberg                             #
 # Created: Jan 2017                                     #
-# Last Modified: 06.02.2017                             #
+# Last Modified: 04.05.2017                             #
 #                                                       # 
 #-------------------------------------------------------#
 
@@ -36,484 +36,36 @@ library(qvalue)
 #-----------------------------------#
 source("~/Desktop/Data/RData/RScripts/FrequencyTests_Functions.R")
 # Set the working directory
-setwd("~/Desktop/Data/allele_frequency_analysis_project/data/")
-
-#--------------------------#
-# False Positive Rate (FPR)#
-#--------------------------#
-# Set alpha levels for which FPR should be computed
+setwd("~/Desktop/Data/allele_frequency_analysis_project/simulation_data/")
 alpha<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5)
-
-# Initialise a dataframe to store data
-fprdat<-data.frame(alpha=vector(),
-                   fpr_glm=vector(),
-                   fpr_cmh=vector(),
-                   fpr_cmh_woo=vector(),
-                   fpr_qglm_unp=vector(),
-                   fpr_gtest=vector(),
-                   fpr_ttest_unp=vector(),
-                   scale=vector(),
-                   npops=vector())
-# Load the data, perform calculations and store the results
-# results files are quite big so they are loaded one at a time.
-for(k in c(2,3,4,10)){
-  ktxt<-paste("k=",k,sep="")
-  print(ktxt)
-  for(res in c(1,0)){
-    print(res)
-    if(res == 0){
-      k <- as.character(k)
-      sim_dat<-read.table(paste(
-        "k=",k,
-        "_fst=0.2_N=100_res=0_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA/FrequencyTest_Simulations_k=",k,
-        "_fst=0.2_N=100_res=0_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA.csv",
-        sep=""),
-        sep = "\t",header = TRUE)
-      sim_dat<-sim_dat[sim_dat$tp == "0",]
-      scale<-unique(sim_dat$scale)
-      
-      # Initialise a temporary internal dataframe for the results
-      fpr<-data.frame(alpha=rep(alpha,length(unique(sim_dat$scale))),
-                      fpr_glm=vector(
-                        length=length(alpha)*length(unique(sim_dat$scale))),
-                      
-                      fpr_cmh=vector(
-                        length=length(alpha)*length(unique(sim_dat$scale))),
-                      
-                      fpr_cmh_woo=vector(
-                        length=length(alpha)*length(unique(sim_dat$scale))),
-                      
-                      fpr_qglm_unp=vector(
-                        length=length(alpha)*length(unique(sim_dat$scale))),
-                      
-                      fpr_gtest=vector(
-                        length=length(alpha)*length(unique(sim_dat$scale))),
-                    
-                      fpr_ttest_unp=vector(
-                        length=length(alpha)*length(unique(sim_dat$scale))),
-                      scale=rep(unique(sim_dat$scale),each=length(alpha)),
-                      npops=rep(unique(sim_dat$npops),each=length(alpha)))
-
-      # Compute the FDR at different levels of alpha
-      for(a in alpha){
-        fpr$fpr_cmh[
-          fpr$alpha==a & 
-            fpr$scale==scale & 
-            fpr$npops==ktxt]<-table(sim_dat$cmh_pval<a)["TRUE"]/nrow(sim_dat)
-        fpr$fpr_cmh_woo[
-          fpr$alpha==a & 
-            fpr$scale==scale & 
-            fpr$npops==ktxt]<-table(sim_dat$cmh_pval[
-              sim_dat$woo_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
-                sim_dat$woo_pval > 0.05,])
-        fpr$fpr_glm[
-          fpr$alpha==a & 
-            fpr$scale==scale & 
-            fpr$npops==ktxt]<-table(sim_dat$glm_l_pval[
-              sim_dat$glm_lxp_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
-                sim_dat$glm_lxp_pval > 0.05,])
-        fpr$fpr_qglm_unp[
-          fpr$alpha==a & 
-           fpr$scale==scale & 
-           fpr$npops==ktxt]<-table(sim_dat$qglm_unp_l_pval<a)["TRUE"]/nrow(sim_dat)
-        fpr$fpr_gtest[
-          fpr$alpha==a & 
-           fpr$scale==scale & 
-           fpr$npops==ktxt]<-table(sim_dat$g_lxc_pval[
-             sim_dat$g_lxcxpx_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
-               sim_dat$g_lxcxpx_pval > 0.05,])
-        fpr$fpr_ttest_unp[
-          fpr$alpha==a & 
-           fpr$scale==scale & 
-           fpr$npops==ktxt]<-table(sim_dat$lm_unp_pval<a)["TRUE"]/nrow(sim_dat)
-      }
-      fprdat<-rbind(fprdat,fpr)
-    }else if(res == 1){
-      for(sc in c(100,200,"neff")){
-        k <- as.character(k)
-        sim_dat<-read.table(paste(
-          "k=",k,
-          "_fst=0.2_N=100_res=1_scale=",sc,"_SNPs=100000_p_tp=0.01_sel_diff=0.2_SIMDATA/FrequencyTest_Simulations_k=",k,
-          "_fst=0.2_N=100_res=1_scale=",sc,"_SNPs=100000_p_tp=0.01_sel_diff=0.2_SIMDATA.csv",
-          sep=""),
-          sep = "\t",header = TRUE)
-        sim_dat<-sim_dat[sim_dat$tp == "0",]
-        scale<-unique(sim_dat$scale)
-        
-        # Initialise a temporary internal dataframe for the results
-        fpr<-data.frame(alpha=rep(alpha,length(unique(sim_dat$scale))),
-                        fpr_glm=vector(
-                          length=length(alpha)*length(unique(sim_dat$scale))),
-                        
-                        fpr_cmh=vector(
-                          length=length(alpha)*length(unique(sim_dat$scale))),
-                        
-                        fpr_cmh_woo=vector(
-                          length=length(alpha)*length(unique(sim_dat$scale))),
-                        
-                        fpr_qglm_unp=vector(
-                          length=length(alpha)*length(unique(sim_dat$scale))),
-                        
-                        fpr_gtest=vector(
-                          length=length(alpha)*length(unique(sim_dat$scale))),
-                        
-                        fpr_ttest_unp=vector(
-                          length=length(alpha)*length(unique(sim_dat$scale))),
-                        scale=rep(unique(sim_dat$scale),each=length(alpha)),
-                        npops=rep(unique(sim_dat$npops),each=length(alpha)))
-        # Compute the FDR at different levels of alpha
-        for(a in alpha){
-          fpr$fpr_cmh[
-            fpr$alpha==a & 
-              fpr$scale==scale & 
-              fpr$npops==ktxt]<-table(sim_dat$cmh_pval<a)["TRUE"]/nrow(sim_dat)
-          fpr$fpr_cmh_woo[
-            fpr$alpha==a & 
-              fpr$scale==scale & 
-              fpr$npops==ktxt]<-table(sim_dat$cmh_pval[
-                sim_dat$woo_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
-                  sim_dat$woo_pval > 0.05,])
-          fpr$fpr_glm[
-            fpr$alpha==a & 
-              fpr$scale==scale & 
-              fpr$npops==ktxt]<-table(sim_dat$glm_l_pval[
-                sim_dat$glm_lxp_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
-                  sim_dat$glm_lxp_pval > 0.05,])
-          fpr$fpr_qglm_unp[
-            fpr$alpha==a & 
-              fpr$scale==scale & 
-              fpr$npops==ktxt]<-table(sim_dat$qglm_unp_l_pval<a)["TRUE"]/nrow(sim_dat)
-          fpr$fpr_gtest[
-            fpr$alpha==a & 
-              fpr$scale==scale & 
-              fpr$npops==ktxt]<-table(sim_dat$g_lxc_pval[
-                sim_dat$g_lxcxpx_pval > 0.05]<a)["TRUE"]/nrow(sim_dat[
-                  sim_dat$g_lxcxpx_pval > 0.05,])
-          fpr$fpr_ttest_unp[
-            fpr$alpha==a & 
-              fpr$scale==scale & 
-              fpr$npops==ktxt]<-table(sim_dat$lm_unp_pval<a)["TRUE"]/nrow(sim_dat)
-          }
-        fprdat<-rbind(fprdat,fpr)
-      }
-    }
-  }
-  
-}
-rm(sim_dat)
-
-fprdat_m<-melt(data=fprdat,
-               measure.vars = c("fpr_cmh",
-                                "fpr_cmh_woo",
-                                "fpr_glm",
-                                "fpr_qglm_unp",
-                                "fpr_gtest",
-                                "fpr_ttest_unp"))
-colnames(fprdat_m)<-c("alpha","scale","npops","test","fpr")
+#----------#
+# Plotting #
+#----------#
+# Load data
+fprdat_m<-read.table("FST=0.1_mcov=200_fprdat_melted.tab",header=TRUE,sep="\t")
+fprdat<-read.table("FST=0.1_mcov=200_fprdat.tab",header=TRUE,sep="\t")
 head(fprdat_m)
+# Re-order the npops column
+levels(fprdat_m$npops)
+fprdat_m$npops<-factor(fprdat_m$npops,levels=c("k=2","k=3","k=4","k=10"))
 
-# Save the data.frame as an R object to avoid having to perform
-# calculations again.
-#save(list = ls(all=TRUE), file = "fpr.RData",envir=.GlobalEnv)
+tprdat_m<-read.table("FST=0.1_mcov=200_tprdat_melted.tab",header=TRUE,sep="\t")
+tprdat<-read.table("FST=0.1_mcov=200_tprdat.tab",header=TRUE,sep="\t")
+# Re-order the npops column
+levels(tprdat_m$npops)
+tprdat_m$npops<-factor(tprdat_m$npops,levels=c("k=2","k=3","k=4","k=10"))
 
-
-#-------------------------#
-# True Positive Rate (TPR)#
-#-------------------------#
-# Initialise a dataframe to store data
-tprdat<-data.frame(
-  npops=vector(length=4),
-  scale=vector(length=4),
-  cmh_tp_rates=vector(length=4),
-  cmh_woo_tp_rates=vector(length=4),
-  glm_l_tp_rates=vector(length=4),
-  qglm_unp_tp_rates=vector(length=4),
-  gtest_tp_rates=vector(length=4),
-  ttest_unp_tp_rates=vector(length=4))
-
-# Load the data, perform calculations and store the results
-# results files are quite big so they are loaded one at a time.
-i <- 1
-for(k in c(2,3,4,10)){
-  ktxt<-paste("k=",k,sep="")
-  print(ktxt)
-  for(res in c(1,0)){
-    print(res)
-    if(res == 0){
-      k <- as.character(k)
-      sim_dat<-read.table(paste(
-        "k=",k,
-        "_fst=0.2_N=100_res=0_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA/FrequencyTest_Simulations_k=",k,
-        "_fst=0.2_N=100_res=0_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA.csv",
-        sep=""),
-        sep = "\t",header = TRUE)
-      scale<-unique(sim_dat$scale)
-      # TPR = Proportion of true positives that are in the top 1%.
-      # CMH-test
-      tprdat$cmh_tp_rates[i]<-nrow(sim_dat[
-        sim_dat$tp == "1" & 
-          sim_dat$cmh_pval < quantile(
-            sim_dat$cmh_pval,0.01,na.rm=TRUE),])/nrow(
-              sim_dat[sim_dat$tp == "1",])
-      
-      tprdat$cmh_woo_tp_rates[i]<-nrow(sim_dat[
-        sim_dat$tp == "1" & 
-          sim_dat$woo_pval > 0.05 & 
-          sim_dat$cmh_pval < quantile(
-            sim_dat$cmh_pval[
-              sim_dat$woo_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
-                sim_dat[sim_dat$tp == "1",])
-      
-      #Bin GLM
-      tprdat$glm_l_tp_rates[i]<-nrow(sim_dat[
-        sim_dat$glm_lxp_pval > 0.05 & 
-          sim_dat$tp == "1" & 
-          sim_dat$glm_l_pval < quantile(
-            sim_dat$glm_l_pval[
-              sim_dat$glm_lxp_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
-                sim_dat[sim_dat$tp == "1",])
-      
-      #Qbin-GLM
-      tprdat$qglm_unp_tp_rates[i]<-nrow(sim_dat[
-        sim_dat$tp == "1" &
-          sim_dat$qglm_unp_l_pval < quantile(
-            sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
-              sim_dat[sim_dat$tp == "1",])
-      
-      #G-test
-      tprdat$gtest_tp_rates[i]<-nrow(sim_dat[
-        sim_dat$g_lxcxpx_pval > 0.05 &
-          sim_dat$tp == "1" &
-            sim_dat$g_lxc_pval < quantile(
-              sim_dat$g_lxc_pval[
-                sim_dat$g_lxcxpx_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
-                  sim_dat[sim_dat$tp == "1",])
-      
-      #T-test
-      tprdat$ttest_unp_tp_rates[i]<-nrow(sim_dat[
-        sim_dat$tp == "1" &
-          sim_dat$lm_unp_pval < quantile(
-            sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
-              sim_dat[sim_dat$tp == "1",])
-      tprdat$npops[i]=ktxt
-      tprdat$scale[i]="CT=var."
-      i<-i+1
-      } else if(res == 1){
-        for (sc in c(100,200,"neff")){
-          k <- as.character(k)
-          sim_dat<-read.table(paste(
-            "k=",k,
-            "_fst=0.2_N=100_res=1_scale=",sc,"_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA/FrequencyTest_Simulations_k=",k,
-            "_fst=0.2_N=100_res=1_scale=",sc,"_SNPs=1000000_p_tp=0.01_sel_diff=0.2_SIMDATA.csv",
-            sep=""),
-            sep = "\t",header = TRUE)
-          # TPR = Proportion of true positives that are in the top 1%.
-          # CMH-test
-          tprdat$cmh_tp_rates[i]<-nrow(sim_dat[
-            sim_dat$tp == "1" & 
-              sim_dat$cmh_pval < quantile(
-                sim_dat$cmh_pval,0.01,na.rm=TRUE),])/nrow(
-                  sim_dat[sim_dat$tp == "1",])
-        
-          tprdat$cmh_woo_tp_rates[i]<-nrow(sim_dat[
-            sim_dat$tp == "1" & 
-              sim_dat$woo_pval > 0.05 & 
-              sim_dat$cmh_pval < quantile(
-                sim_dat$cmh_pval[
-                  sim_dat$woo_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
-                    sim_dat[sim_dat$tp == "1",])
-        
-          tprdat$glm_l_tp_rates[i]<-nrow(sim_dat[
-            sim_dat$glm_lxp_pval > 0.05 & 
-              sim_dat$tp == "1" & 
-              sim_dat$glm_l_pval < quantile(
-                sim_dat$glm_l_pval[
-                  sim_dat$glm_lxp_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
-                    sim_dat[sim_dat$tp == "1",])
-        
-          tprdat$qglm_unp_tp_rates[i]<-nrow(sim_dat[
-            sim_dat$tp == "1" &
-              sim_dat$qglm_unp_l_pval < quantile(
-                sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
-                  sim_dat[sim_dat$tp == "1",])
-        
-          tprdat$gtest_tp_rates[i]<-nrow(sim_dat[
-            sim_dat$g_lxcxpx_pval > 0.05 &
-              sim_dat$tp == "1" &
-                sim_dat$g_lxc_pval < quantile(
-                  sim_dat$g_lxc_pval[
-                    sim_dat$g_lxcxpx_pval > 0.05],0.01,na.rm=TRUE),])/nrow(
-                      sim_dat[sim_dat$tp == "1",])
-        
-          tprdat$ttest_unp_tp_rates[i]<-nrow(sim_dat[
-            sim_dat$tp == "1" &
-              sim_dat$lm_unp_pval < quantile(
-                sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
-                  sim_dat[sim_dat$tp == "1",])
-          tprdat$npops[i]=ktxt
-          tprdat$scale[i]=paste("CT=",sc)
-          i<-i+1
-        }
-      }
-  }
-}
-rm(sim_dat)
-
-# "melt" the data for easier plotting.
-tprdat_m <- melt(tprdat,
-                 measure.vars = c(
-                   "cmh_tp_rates",
-                   "cmh_woo_tp_rates",
-                   "glm_l_tp_rates",
-                   "qglm_unp_tp_rates",
-                   "gtest_tp_rates",
-                   "ttest_unp_tp_rates")
-                 )
-colnames(tprdat_m)<-c("npops","scale","test","tpr")
-
-# Save the data.frame as an R object to avoid having to perform
-# calculations again.
-#save(list = ls(all=TRUE), file = "tpr.RData",envir=.GlobalEnv)
-
-
-
-#-------------------------#
-# True Positive Rate (TPR)#
-#-------------------------#
-
-# Initialise a dataframe to store data
-tprdatcons<-data.frame(
-  npops=vector(length=28),
-  cmh_tp_rates=vector(length=28),
-  qglm_unp_tp_rates=vector(length=28),
-  ttest_unp_tp_rates=vector(length=28),
-  sim=vector(length=28),
-  snps=vector(length=28))
-
-# Load the data, perform calculations and store the results
-# results files are quite big so they are loaded one at a time.
-i <- 1
-for(k in c(4,10)){
-  ktxt<-paste("k=",k,sep="")
-  k <- as.character(k)
-  for(snps in c(10000,1000000)){
-    if(snps == 10000){
-      print(ktxt)
-      snptxt<-paste("SNPs=",snps,sep="")
-      print(snptxt)
-      for(sim in seq(1,10)){
-        simtxt<-paste("sim=",sim,sep="")
-        print(simtxt)
-        sim_dat<-read.table(paste(
-          "k=",k,
-          "_fst=0.2_N=100_res=1_scale=100_SNPs=10000_p_tp=0.01_sel_diff=0.2_",
-          sim,"/FrequencyTest_Simulations_k=",k,
-          "_fst=0.2_N=100_res=1_scale=100_SNPs=10000_p_tp=0.01_sel_diff=0.2_",
-          sim,".csv",
-          sep=""),
-          sep = "\t",header = TRUE)
-          # TPR = Proportion of true positives that are in the top 1%.
-          # CMH-test
-        tprdatcons$cmh_tp_rates[i]<-nrow(sim_dat[
-          sim_dat$tp == "1" &
-            sim_dat$cmh_pval < quantile(
-              sim_dat$cmh_pval,0.01,na.rm=TRUE),])/nrow(
-                sim_dat[sim_dat$tp == "1",])
-        tprdatcons$qglm_unp_tp_rates[i]<-nrow(sim_dat[
-          sim_dat$tp == "1" &
-            sim_dat$qglm_unp_l_pval < quantile(
-              sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
-                sim_dat[sim_dat$tp == "1",])
-        tprdatcons$ttest_unp_tp_rates[i]<-nrow(sim_dat[
-          sim_dat$tp == "1" &
-            sim_dat$lm_unp_pval < quantile(
-              sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
-                sim_dat[sim_dat$tp == "1",])
-        tprdatcons$npops[i]=ktxt
-        tprdatcons$sim[i]=simtxt
-        tprdatcons$snps[i]=snptxt
-        i<-i+1
-      }
-    }else if(snps == 1000000){
-      snptxt<-paste("SNPs=",snps,sep="")
-      print(snptxt)
-      for(sim in seq(1,4)){
-        simtxt<-paste("sim=",sim,sep="")
-        print(simtxt)
-        sim_dat<-read.table(paste(
-          "k=",k,
-          "_fst=0.2_N=100_res=1_scale=100_SNPs=1000000_p_tp=0.01_sel_diff=0.2_",
-          sim,"/FrequencyTest_Simulations_k=",k,
-          "_fst=0.2_N=100_res=1_scale=100_SNPs=1000000_p_tp=0.01_sel_diff=0.2_",
-          sim,".csv",
-          sep=""),
-          sep = "\t",header = TRUE)
-        # TPR = Proportion of true positives that are in the top 1%.
-        # CMH-test
-        tprdatcons$cmh_tp_rates[i]<-nrow(sim_dat[
-          sim_dat$tp == "1" &
-            sim_dat$cmh_pval < quantile(
-              sim_dat$cmh_pval,0.01,na.rm=TRUE),])/nrow(
-                sim_dat[sim_dat$tp == "1",])
-        tprdatcons$qglm_unp_tp_rates[i]<-nrow(sim_dat[
-          sim_dat$tp == "1" &
-            sim_dat$qglm_unp_l_pval < quantile(
-              sim_dat$qglm_unp_l_pval,0.01,na.rm=TRUE),])/nrow(
-                sim_dat[sim_dat$tp == "1",])
-        tprdatcons$ttest_unp_tp_rates[i]<-nrow(sim_dat[
-          sim_dat$tp == "1" &
-            sim_dat$lm_unp_pval < quantile(
-              sim_dat$lm_unp_pval,0.01,na.rm=TRUE),])/nrow(
-                sim_dat[sim_dat$tp == "1",])
-        tprdatcons$npops[i]=ktxt
-        tprdatcons$sim[i]=simtxt
-        tprdatcons$snps[i]=snptxt
-        i<-i+1
-      }
-    }
-  }
-}
-rm(sim_dat)
-
-
-# Re-order the factor levels for the npops (Nr. Replicates) column
-# this makes the plots more intuitive.
-tprdatcons$npops <- factor(tprdatcons$npops, 
-                           levels = c("k=4","k=10"))
-# "melt" the data for easier plotting.
-tprdatcons_m <- melt(tprdatcons,
-                 measure.vars = c(
-                   "cmh_tp_rates",
-                   "qglm_unp_tp_rates",
-                   "ttest_unp_tp_rates"))
-colnames(tprdatcons_m)<-c("npops","sim","snps","test","tpr")
-
-tprdatcons_m
-
-# Save the data.frame as an R object to avoid having to perform
-# calculations again.
-#save(list = ls(all=TRUE), file = "tprcons.RData",envir=.GlobalEnv)
-
-
-
-#---------#
-# Plotting#
-#---------#
-source("~/Desktop/Data/RData/RScripts/FrequencyTests_Functions.R")
-setwd("~/Desktop/Data/allele_frequency_analysis_project/data/")
-# Load saved R objects
-load("fpr.RData")
-load("tpr.RData")
-load("tprcons.RData")
+tprconsdat<-read.table("tprcons.RData")
 #----------#
 # Plot FPR #
 #----------#
+levels(fprdat_m$test)
 fpr_v_alp<-ggplot(data=fprdat_m)+
   xlab(expression(paste(alpha,"-threshold")))+
   ylab("False Positive Rate")+
   scale_x_continuous(limits=c(min(alpha),max(alpha)),
                      breaks=c(0.0001,0.001,0.01,0.1,0.5),trans="log10")+
-  scale_y_continuous(limits=c(0.0001,1),
+  scale_y_continuous(limits=c(0.00001,1),
                      breaks=c(0.0001,0.001,0.01,0.1,1),trans="log10")+
   geom_abline(intercept=0,slope=1,colour="grey")+
   geom_abline(intercept=log10(5),slope=1,colour="grey",linetype="dashed")+
@@ -524,42 +76,46 @@ fpr_v_alp<-ggplot(data=fprdat_m)+
   geom_text(aes(0.00025,0.00025*10,label="10"),size = 3)+
   geom_point(data=fprdat_m,aes(x=alpha,y=fpr,shape=test,colour=test),
              size = 3)+
-  scale_shape_manual("",labels=c("CMH","CMH+Woolf","Binomial\nGLM",
-                                   "Quasibinomial\nGLM","G-test","LM"),
-                     values=c(16,17,15,3,7,10))+
-  scale_colour_manual("",labels = c("CMH","CMH+Woolf","Binomial\nGLM",
-                                "Quasibinomial\nGLM","G-test","LM"),
-                  values=c('#1b9e77','#d95f02','#7570b3',
-                           '#e7298a','#66a61e','#e6ab02'))+
+  scale_shape_manual("",labels = c("Binomial\nGLM (1)","Binomial\nGLM (2)",
+                                   "CMH-test","CMH-test+Woolf-test",
+                                   "G-test","LM","Quasibinomial\nGLM"),
+                     values=c(16,17,15,3,7,10,23))+
+  scale_colour_manual("",labels = c("Binomial\nGLM (1)","Binomial\nGLM (2)",
+                                    "CMH-test","CMH-test+Woolf-test",
+                                    "G-test","LM","Quasibinomial\nGLM"),
+                      values=c('#1b9e77','#d95f02','#7570b3',
+                               '#e7298a','#66a61e','#e6ab02',
+                               'black'))+
   facet_grid(scale~npops)
 fpr_v_alp +annotation_logticks() + my.theme + 
   theme(axis.text.x = element_text(size = 10,angle=45,hjust=1,vjust=1),
         axis.text.y = element_text(size = 10),
         strip.text = element_text(size = 10),
         legend.text = element_text(size = 10),
-        legend.key.size = unit(7,"mm"))
+        legend.key.size = unit(7,"mm"),
+        legend.position = "right")
+
 
 #----------#
-# Plot FPR #
+# Plot TPR #
 #----------#
-# Re-order the factor levels for the npops (Nr. Replicates) column
-# this makes the plots more intuitive.
-tprdat_m$npops<-factor(tprdat_m$npops,levels=c("k=2","k=3","k=4","k=10"))
-
+head(tprdat_m)
 tp_plot<-ggplot(data=tprdat_m)+
   geom_point(aes(x=npops,y=tpr,shape=test,colour=test),
-             colour = "black",
              size = 3,
              position=position_jitter(width = 0.05))+
   xlab("Nr. Replicated Treatment Lines")+
   ylab("True Positive Rate")+
-  scale_shape_manual("",labels=c("CMH","CMH+Woolf","Binomial\nGLM",
-                                 "Quasibinomial\nGLM","G-test","LM"),
-                     values=c(16,17,15,3,7,10))+
-  scale_colour_manual("",labels = c("CMH","CMH+Woolf","Binomial\nGLM",
-                                    "Quasibinomial\nGLM","G-test","LM"),
-                      values=c('#1b9e77','#d95f02','#7570b3',
-                               '#e7298a','#66a61e','#e6ab02'))+
+#  scale_shape_manual("",labels = c("Binomial\nGLM (1)","Binomial\nGLM (2)",
+#                                   "CMH-test","CMH-test+Woolf-test",
+#                                   "G-test","LM","Quasibinomial\nGLM"),
+#                     values=c(16,17,15,3,7,10,23))+
+#  scale_colour_manual("",labels = c("Binomial\nGLM (1)","Binomial\nGLM (2)",
+#                                    "CMH-test","CMH-test+Woolf-test",
+#                                    "G-test","LM","Quasibinomial\nGLM"),
+#                      values=c('#1b9e77','#d95f02','#7570b3',
+#                               '#e7298a','#66a61e','#e6ab02',
+#                               'black'))+
   facet_grid(scale~.)
 
 tp_plot + my.theme + theme(
@@ -569,7 +125,8 @@ tp_plot + my.theme + theme(
   axis.ticks.x = element_blank(),
   strip.text = element_text(size = 10),
   legend.text = element_text(size = 10),
-  legend.key.size = unit(7,"mm"))
+  legend.key.size = unit(7,"mm"),
+  legend.position = "right")
 
 #-------------------------#
 # Plot consistency of FPR #
@@ -638,8 +195,9 @@ cmh_his + my.theme +
 data<-read.table("mean_sd_tp0.tab", header = FALSE)
 colnames(data)<-c("sd_diffs","mean_diffs","npops","scale","tp")
 # Plot distributions of mean_diffs and sd_diffs
-
-# Plot mean_diffs vs sd_diffs and correlation coefficients (Figure S3)
+#----------------------------------------------------------------------#
+# Plot mean_diffs vs sd_diffs and correlation coefficients (Figure S3) #
+#----------------------------------------------------------------------#
 sd_v_mean_plot <- ggplot() +
   geom_point(data=data, aes(mean_diffs,sd_diffs),
              size = 3,
