@@ -33,6 +33,7 @@ fst=as.numeric(args[1])#0.1
 mcov=as.numeric(args[2])#200
 dir=args[3]
 K<-c(4,10)
+options(scipen=6)
 #-----------------------------------#
 # SOURCE THE FUNCTIONS:
 # From FrequencyTests_Functions.R
