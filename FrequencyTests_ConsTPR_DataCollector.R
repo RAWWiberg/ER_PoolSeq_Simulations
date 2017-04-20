@@ -185,10 +185,10 @@ tprdatcons_m
 # calculations again.
 write.table(tprdatcons_m,paste("FST=",fst,
 			   "_mcov=",mcov,
-			   "_tprdatcons_melted.tab"),quote=FALSE,row.names=FALSE,sep="\t")
+			   "_tprdatcons_melted.tab",sep=""),quote=FALSE,row.names=FALSE,sep="\t")
 write.table(tprdatcons,paste("FST=",fst,
 			   "_mcov=",mcov,
-			   "_tprdatcons.tab"),quote=FALSE,row.names=FALSE,sep="\t")
+			   "_tprdatcons.tab",sep=""),quote=FALSE,row.names=FALSE,sep="\t")
 
 #save(list = ls(all=TRUE), file = "tprcons.RData",envir=.GlobalEnv)
 
